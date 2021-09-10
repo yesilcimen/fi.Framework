@@ -88,7 +88,12 @@ namespace fi.gRPC.Server
 
         #region private methods
 
-        private new async Task HandleSuccessResponseAsync<TResponse>(TResponse response, ServerCallContext context) where TResponse : class => _logManager.TryServerSideAddResponseLog(response, context);
+        private Task HandleSuccessResponseAsync<TResponse>(TResponse response, ServerCallContext context) where TResponse : class
+        {
+            _logManager.TryServerSideAddResponseLog(response, context);
+            return Task.CompletedTask;
+        }
+
 
 
         /// <summary>
@@ -97,7 +102,7 @@ namespace fi.gRPC.Server
         /// <param name="context"></param>
         /// <param name="ex"></param>
         /// <returns></returns>
-        private new async Task HandleExceptionAsync(ServerCallContext context, Exception ex)
+        private Task HandleExceptionAsync(ServerCallContext context, Exception ex)
         {
             ErrorModel errorModel;
 
@@ -145,6 +150,8 @@ namespace fi.gRPC.Server
                     }
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         #endregion private methods

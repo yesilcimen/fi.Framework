@@ -44,7 +44,5 @@ namespace fi.Core
     public interface IRequest
     {
         Guid UserId { get; set; }
-        Guid? PersonId { get; set; }
-        Guid? AccountId { get; set; }
     }
 }

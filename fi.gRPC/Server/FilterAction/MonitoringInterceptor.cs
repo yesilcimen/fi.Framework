@@ -58,7 +58,7 @@ namespace fi.gRPC.Server
 
         private bool first = true;
 
-        private new async Task TryCreateLogAsync<TRequest>(TRequest request, ServerCallContext context, MethodType methodType) where TRequest : class
+        private Task TryCreateLogAsync<TRequest>(TRequest request, ServerCallContext context, MethodType methodType) where TRequest : class
         {
             var methodName = context.Method.Split('/').Last();
 
@@ -80,6 +80,8 @@ namespace fi.gRPC.Server
                 if (hasServiceLog && context.GetHttpContext().Items["SessionInformation"] is WebServiceLog log)
                     log.ServiceLog.Requests.Add(new Request { Id = Guid.NewGuid(), Data = request });
             }
+
+            return Task.CompletedTask;
         }
 
         private bool HasServiceLog(Type serviceType, string methodName, Type[] inputParameterTypes)

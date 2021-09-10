@@ -71,7 +71,7 @@ namespace fi.gRPC.Client
         }
 
 
-       
+
         public override AsyncServerStreamingCall<TResponse> AsyncServerStreamingCall<TRequest, TResponse>(TRequest request, ClientInterceptorContext<TRequest, TResponse> context, AsyncServerStreamingCallContinuation<TRequest, TResponse> continuation)
         {
             if (bool.TryParse(context.Options.Headers?
@@ -86,7 +86,8 @@ namespace fi.gRPC.Client
                 var streamActions = new TracingAsyncStreamReader<TResponse>.StreamActions(
                     response => _logManager.TryClientSideAddResponseLog(response, log),
                     () => _logManager.CompleteClientSideLog(log),
-                    exception => {
+                    exception =>
+                    {
                         if (GrpcExceptionHandler.TryGetErrorModel(exception, out ErrorModel errorModel))
                         {
                             if (_logManager.TryClientSideAddResponseLog(errorModel, log))

@@ -23,12 +23,10 @@ namespace fi.API
                 #region UserId ve PersonId
                 var validInfoArray = value as IRequest[] ?? new IRequest[] { value as IRequest }.Where(w => w is not null);
 
-                //foreach (var validInfo in validInfoArray)
-                //{
-                //    validInfo.UserId = (Guid)context.HttpContext.Items["EtaUserId"];
-                //    validInfo.PersonId = (Guid?)context.HttpContext.Items["EtaPersonId"];
-                //    validInfo.AccountId = (Guid)context.HttpContext.Items["EtaAccountId"];
-                //}
+                foreach (var validInfo in validInfoArray)
+                {
+                    validInfo.UserId = System.Guid.Empty/*Login olan kullanıcının id si verilmelidir.*/;
+                }
                 #endregion
 
                 var validArray = value as RequestValidate[] ?? new RequestValidate[] { value as RequestValidate }.Where(w => w is not null);

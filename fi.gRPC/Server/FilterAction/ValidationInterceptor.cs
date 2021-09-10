@@ -57,7 +57,7 @@ namespace fi.gRPC.Server
 
         #region private methods
 
-        private new async Task ValidateRequestAsync<TRequest>(TRequest request, ServerCallContext context) where TRequest : class
+        private Task ValidateRequestAsync<TRequest>(TRequest request, ServerCallContext context) where TRequest : class
         {
             if (request is RequestValidate requestValidate)
             {
@@ -78,6 +78,8 @@ namespace fi.gRPC.Server
                     }
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         #endregion private methods
