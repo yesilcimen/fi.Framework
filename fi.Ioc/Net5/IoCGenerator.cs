@@ -21,9 +21,9 @@ namespace fi.Ioc
 
             private readonly IDictionary<Type, Action<Type, IServiceCollection>> GetLifeCycle =
                new Dictionary<Type, Action<Type, IServiceCollection>> {
-                { typeof(ISingletonDependency), (implementationType, service) => implementationType.GetTypeInfo().ImplementedInterfaces.Where(m => m != typeof(ISingletonDependency) && !m.Namespace.Equals("Eta.Framework") && !m.Namespace.Contains("System")).ToList().ForEach(i => service.AddSingleton(i, implementationType)) },
-                { typeof(IScopedDependency), (implementationType, service) => implementationType.GetTypeInfo().ImplementedInterfaces.Where(m => m != typeof(IScopedDependency) && !m.Namespace.Equals("Eta.Framework") && !m.Namespace.Contains("System")).ToList().ForEach(i => service.AddScoped(i, implementationType)) },
-                { typeof(ITransientDependency), (implementationType, service) => implementationType.GetTypeInfo().ImplementedInterfaces.Where(m => m != typeof(ITransientDependency) && !m.Namespace.Equals("Eta.Framework") && !m.Namespace.Contains("System")).ToList().ForEach(i => service.AddTransient(i, implementationType)) },
+                { typeof(ISingletonDependency), (implementationType, service) => implementationType.GetTypeInfo().ImplementedInterfaces.Where(m => m != typeof(ISingletonDependency) && !m.Namespace.Equals("fi.Framework") && !m.Namespace.Contains("System")).ToList().ForEach(i => service.AddSingleton(i, implementationType)) },
+                { typeof(IScopedDependency), (implementationType, service) => implementationType.GetTypeInfo().ImplementedInterfaces.Where(m => m != typeof(IScopedDependency) && !m.Namespace.Equals("fi.Framework") && !m.Namespace.Contains("System")).ToList().ForEach(i => service.AddScoped(i, implementationType)) },
+                { typeof(ITransientDependency), (implementationType, service) => implementationType.GetTypeInfo().ImplementedInterfaces.Where(m => m != typeof(ITransientDependency) && !m.Namespace.Equals("fi.Framework") && !m.Namespace.Contains("System")).ToList().ForEach(i => service.AddTransient(i, implementationType)) },
                 { typeof(IScopedSelfDependency), (implementationType, service) => service.AddScoped(implementationType) },
                 { typeof(ISingletonSelfDependency), (implementationType, service) => service.AddSingleton(implementationType) },
                 { typeof(ITransientSelfDependency), (implementationType, service) => service.AddTransient(implementationType) }
