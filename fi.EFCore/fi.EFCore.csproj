@@ -2,6 +2,17 @@
 
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<Copyright>2021</Copyright>
+		<Authors>fi</Authors>
+		<Product>fi's EFCore Framework</Product>
+		<Description>This is EFCore Structure</Description>
+		<PackageLicenseExpression>fi</PackageLicenseExpression>
+		<PackageReleaseNotes>This is initial release.</PackageReleaseNotes>
+		<Version>0.0.1</Version>
+		<AssemblyVersion>0.0.1.0</AssemblyVersion>
+		<FileVersion>0.0.1.0</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -11,7 +22,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\fi.Core\fi.Core.csproj" />
+		<ProjectReference Include="..\fi.Core\fi.Core.csproj" />
 	</ItemGroup>
 
 </Project>
