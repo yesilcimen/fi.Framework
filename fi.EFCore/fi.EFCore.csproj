@@ -21,8 +21,4 @@
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="3.0.0" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\fi.Core\fi.Core.csproj" />
-	</ItemGroup>
-
 </Project>

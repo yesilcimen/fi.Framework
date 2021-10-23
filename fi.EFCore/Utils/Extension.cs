@@ -1,5 +1,4 @@
-﻿using fi.Core;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
@@ -163,7 +162,7 @@ namespace fi.EFCore
 
             return obj;
         }
-
+        /*
         public static List<T> ToListFromCache<T>(this IQueryable<T> query, ICache cacheService, TimeSpan expireTime) where T : class
         {
             return ToListFromCache(query, cacheService, query.GetCacheKey(), expireTime);
@@ -237,7 +236,7 @@ namespace fi.EFCore
 
             return result;
         }
-
+        */
         public static string GetCacheKey<T>(this IQueryable<T> query) where T : class => query.ToQueryString().ToMd5Fingerprint();
         
         public static string ToMd5Fingerprint(this string s)
