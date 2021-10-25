@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using fi.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
@@ -129,7 +129,7 @@ namespace fi.EFCore
             return obj;
         }
 
-        public static int SqlNonQueryWithParameters(this DbContext context, string query, CommandType commandType, SqlParameter[] sqlParameters)
+        public static int SqlNonQueryWithParameters(this DbContext context, string query, CommandType commandType, DbParameter[] sqlParameters)
         {
             int obj;
 
@@ -146,7 +146,7 @@ namespace fi.EFCore
             return obj;
         }
 
-        public static async Task<int> SqlNonQueryWithParametersAsync(this DbContext context, string query, CommandType commandType, SqlParameter[] sqlParameters, CancellationToken cancellationToken = default)
+        public static async Task<int> SqlNonQueryWithParametersAsync(this DbContext context, string query, CommandType commandType, DbParameter[] sqlParameters, CancellationToken cancellationToken = default)
         {
             int obj;
 
@@ -162,7 +162,7 @@ namespace fi.EFCore
 
             return obj;
         }
-        /*
+        
         public static List<T> ToListFromCache<T>(this IQueryable<T> query, ICache cacheService, TimeSpan expireTime) where T : class
         {
             return ToListFromCache(query, cacheService, query.GetCacheKey(), expireTime);
@@ -236,7 +236,7 @@ namespace fi.EFCore
 
             return result;
         }
-        */
+        
         public static string GetCacheKey<T>(this IQueryable<T> query) where T : class => query.ToQueryString().ToMd5Fingerprint();
         
         public static string ToMd5Fingerprint(this string s)
