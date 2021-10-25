@@ -2,10 +2,29 @@
 
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<Copyright>2021</Copyright>
+		<Authors>fi</Authors>
+		<Product>fi's Common Framework</Product>
+		<Description>This is Common Structure</Description>
+		<PackageLicenseExpression></PackageLicenseExpression>
+		<PackageReleaseNotes>This is initial release.</PackageReleaseNotes>
+		<Version>0.0.1</Version>
+		<AssemblyVersion>0.0.1.0</AssemblyVersion>
+		<FileVersion>0.0.1.0</FileVersion>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\fi.Core\fi.Core.csproj" />
+		<None Include="..\LICENSE.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="fi.Core" Version="0.0.2" />
 	</ItemGroup>
 
 </Project>
