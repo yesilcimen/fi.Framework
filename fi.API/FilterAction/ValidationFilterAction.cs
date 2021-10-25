@@ -15,7 +15,7 @@ namespace fi.API
 
         public virtual void OnActionExecuting(ActionExecutingContext context)
         {
-            List<ErrorResult> etaRequestValidates = new();
+            List<ErrorResult> requestValidates = new();
 
             #region Validation
             foreach (var value in context.ActionArguments.Values)
@@ -36,12 +36,12 @@ namespace fi.API
                     valid.Validate();
 
                     if (valid.ValidateResults.Count > 0)
-                        etaRequestValidates.AddRange(valid.ValidateResults);
+                        requestValidates.AddRange(valid.ValidateResults);
                 }
 
             }
-            if (etaRequestValidates.Count > 0)
-                throw new RequestException(etaRequestValidates, (int)HttpStatusCode.UnprocessableEntity, ResponseMessageType.ValidationException);
+            if (requestValidates.Count > 0)
+                throw new RequestException(requestValidates, (int)HttpStatusCode.UnprocessableEntity, ResponseMessageType.ValidationException);
 
             #endregion
         }
