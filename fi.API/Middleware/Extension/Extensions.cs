@@ -4,6 +4,6 @@ namespace fi.API
 {
     public static class Extensions
     {
-        public static IApplicationBuilder UseEtaExceptionMiddleware(this IApplicationBuilder builder) => builder.UseMiddleware<ExceptionMiddleware>();
+        public static IApplicationBuilder UseFiExceptionMiddleware(this IApplicationBuilder builder) => builder.UseMiddleware<ExceptionMiddleware>();
     }
 }
