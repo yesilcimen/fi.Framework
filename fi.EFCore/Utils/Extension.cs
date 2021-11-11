@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -21,67 +22,76 @@ namespace fi.EFCore
         static readonly ConcurrentDictionary<string, string> concSafe = new();
         static string InternConcurrent(string s) => concSafe.GetOrAdd(s, s);
 
+        #region SqlReader
         public static List<T> SqlReader<T>(this DbContext context, string query, CommandType commandType, Func<DbDataReader, T> map) where T : class, new()
         {
-            List<T> entities;
-
-            using (var command = context.Database.GetDbConnection().CreateCommand())
-            {
-                command.CommandText = query;
-                command.CommandType = commandType;
-                context.Database.OpenConnection();
-                using (var result = command.ExecuteReader())
-                {
-                    entities = new List<T>();
-
-                    while (result.Read())
-                        entities.Add(map(result));
-                }
-                context.Database.CloseConnection();
-            }
+            using var transaction = context.Database.BeginTransaction();
+            var entities = context.SqlReader(query, commandType, transaction.GetDbTransaction(), map);
+            transaction.Commit();
 
             return entities;
         }
 
+        public static List<T> SqlReader<T>(this DbContext context, string query, CommandType commandType, DbTransaction transaction, Func<DbDataReader, T> map) where T : class, new()
+        {
+            List<T> entities;
+
+            using (DbCommand command = context.Database.GetDbConnection().CreateCommand())
+            {
+                command.Transaction = transaction;
+                command.CommandText = query;
+                command.CommandType = commandType;
+                using var result = command.ExecuteReader();
+                entities = new List<T>();
+
+                while (result.Read())
+                    entities.Add(map(result));
+            }
+
+            return entities;
+        }
+        #endregion
+
+        #region SqlReaderAsync
         public static async Task<List<T>> SqlReaderAsync<T>(this DbContext context, string query, CommandType commandType, Func<DbDataReader, T> map, CancellationToken cancellationToken = default) where T : class, new()
         {
+            using var transaction = context.Database.BeginTransaction();
+            var entities = await context.SqlReaderAsync(query, commandType, transaction.GetDbTransaction(), map, cancellationToken);
+            transaction.Commit();
+            return entities;
+        }
+
+        public static async Task<List<T>> SqlReaderAsync<T>(this DbContext context, string query, CommandType commandType, DbTransaction transaction, Func<DbDataReader, T> map, CancellationToken cancellationToken = default) where T : class, new()
+        {
             List<T> entities;
 
-            using (var command = context.Database.GetDbConnection().CreateCommand())
+            using (DbCommand command = context.Database.GetDbConnection().CreateCommand())
             {
                 command.CommandText = query;
                 command.CommandType = commandType;
-                context.Database.OpenConnection();
-                using (var result = await command.ExecuteReaderAsync(cancellationToken))
-                {
-                    entities = new List<T>();
+                command.Transaction = transaction;
+                using var result = await command.ExecuteReaderAsync(cancellationToken);
+                entities = new List<T>();
 
-                    while (result.Read())
-                        entities.Add(map(result));
-                }
-                context.Database.CloseConnection();
+                while (result.Read())
+                    entities.Add(map(result));
             }
 
             return entities;
         }
+        #endregion
 
+        #region SqlScalar
         public static object SqlScalar(this DbContext context, string query, CommandType commandType)
         {
-            object obj;
-
-            using (var command = context.Database.GetDbConnection().CreateCommand())
-            {
-                command.CommandText = query;
-                command.CommandType = commandType;
-                context.Database.OpenConnection();
-                obj = command.ExecuteScalar();
-                context.Database.CloseConnection();
-            }
+            using var transaction = context.Database.BeginTransaction();
+            var obj = context.SqlScalar(query, commandType, transaction);
+            transaction.Commit();
 
             return obj;
         }
 
-        public static async Task<object> SqlScalarAsync(this DbContext context, string query, CommandType commandType, CancellationToken cancellationToken = default)
+        public static object SqlScalar(this DbContext context, string query, CommandType commandType, IDbContextTransaction transaction)
         {
             object obj;
 
@@ -89,80 +99,149 @@ namespace fi.EFCore
             {
                 command.CommandText = query;
                 command.CommandType = commandType;
-                context.Database.OpenConnection();
-                obj = await command.ExecuteScalarAsync(cancellationToken);
-                context.Database.CloseConnection();
+                command.Transaction = transaction.GetDbTransaction();
+                obj = command.ExecuteScalar();
             }
 
             return obj;
         }
+        #endregion
 
+        #region SqlScalarAsync
+        public static async Task<object> SqlScalarAsync(this DbContext context, string query, CommandType commandType, CancellationToken cancellationToken = default)
+        {
+            using var transaction = context.Database.BeginTransaction();
+            object obj = await context.SqlScalarAsync(query, commandType, transaction, cancellationToken);
+            transaction.Commit();
+
+            return obj;
+        }
+
+        public static async Task<object> SqlScalarAsync(this DbContext context, string query, CommandType commandType, IDbContextTransaction transaction, CancellationToken cancellationToken = default)
+        {
+            object obj;
+
+            using (var command = context.Database.GetDbConnection().CreateCommand())
+            {
+                command.CommandText = query;
+                command.CommandType = commandType;
+                command.Transaction = transaction.GetDbTransaction();
+                obj = await command.ExecuteScalarAsync(cancellationToken);
+            }
+
+            return obj;
+        }
+        #endregion
+
+        #region SqlNonQuery
         public static int SqlNonQuery(this DbContext context, string query, CommandType commandType)
         {
             int obj;
 
-            using (var command = context.Database.GetDbConnection().CreateCommand())
-            {
-                command.CommandText = query;
-                command.CommandType = commandType;
-                context.Database.OpenConnection();
-                obj = command.ExecuteNonQuery();
-                context.Database.CloseConnection();
-            }
+            using var transaction = context.Database.BeginTransaction();
+            obj = context.SqlNonQuery(query, commandType, transaction);
+            transaction.Commit();
 
             return obj;
         }
 
+        public static int SqlNonQuery(this DbContext context, string query, CommandType commandType, IDbContextTransaction transaction)
+        {
+            int obj;
+
+            using (var command = context.Database.GetDbConnection().CreateCommand())
+            {
+                command.CommandText = query;
+                command.CommandType = commandType;
+                command.Transaction = transaction.GetDbTransaction();
+                obj = command.ExecuteNonQuery();
+            }
+
+            return obj;
+        }
+        #endregion
+
+        #region SqlNonQueryAsync
         public static async Task<int> SqlNonQueryAsync(this DbContext context, string query, CommandType commandType, CancellationToken cancellationToken = default)
         {
             int obj;
 
+            using var transaction = context.Database.BeginTransaction();
+            obj = await context.SqlNonQueryAsync(query, commandType, transaction, cancellationToken);
+            transaction.Commit();
+            return obj;
+        }
+        public static async Task<int> SqlNonQueryAsync(this DbContext context, string query, CommandType commandType, IDbContextTransaction transaction, CancellationToken cancellationToken = default)
+        {
+            int obj;
+
             using (var command = context.Database.GetDbConnection().CreateCommand())
             {
                 command.CommandText = query;
                 command.CommandType = commandType;
-                context.Database.OpenConnection();
+                command.Transaction = transaction.GetDbTransaction();
                 obj = await command.ExecuteNonQueryAsync(cancellationToken);
-                context.Database.CloseConnection();
             }
 
             return obj;
         }
+        #endregion
 
+        #region SqlNonQueryWithParameters
         public static int SqlNonQueryWithParameters(this DbContext context, string query, CommandType commandType, DbParameter[] sqlParameters)
         {
             int obj;
 
-            using (var command = context.Database.GetDbConnection().CreateCommand())
-            {
-                command.CommandText = query;
-                command.CommandType = commandType;
-                command.Parameters.AddRange(sqlParameters);
-                context.Database.OpenConnection();
-                obj = command.ExecuteNonQuery();
-                context.Database.CloseConnection();
-            }
-
+            using var transaction = context.Database.BeginTransaction();
+            obj = context.SqlNonQueryWithParameters(query, commandType, transaction, sqlParameters);
+            transaction.Commit();
             return obj;
         }
 
-        public static async Task<int> SqlNonQueryWithParametersAsync(this DbContext context, string query, CommandType commandType, DbParameter[] sqlParameters, CancellationToken cancellationToken = default)
+        public static int SqlNonQueryWithParameters(this DbContext context, string query, CommandType commandType, IDbContextTransaction transaction, DbParameter[] sqlParameters)
         {
             int obj;
 
             using (var command = context.Database.GetDbConnection().CreateCommand())
             {
+                command.Transaction = transaction.GetDbTransaction();
                 command.CommandText = query;
                 command.CommandType = commandType;
                 command.Parameters.AddRange(sqlParameters);
-                context.Database.OpenConnection();
-                obj = await command.ExecuteNonQueryAsync(cancellationToken);
-                context.Database.CloseConnection();
+                obj = command.ExecuteNonQuery();
             }
 
             return obj;
         }
-        
+        #endregion
+
+        #region SqlNonQueryWithParametersAsync
+        public static async Task<int> SqlNonQueryWithParametersAsync(this DbContext context, string query, CommandType commandType, DbParameter[] sqlParameters, CancellationToken cancellationToken = default)
+        {
+            int obj;
+
+            using var transaction = context.Database.BeginTransaction();
+            obj = await context.SqlNonQueryWithParametersAsync(query, commandType, transaction, sqlParameters, cancellationToken);
+            transaction.Commit();
+            return obj;
+        }
+        public static async Task<int> SqlNonQueryWithParametersAsync(this DbContext context, string query, CommandType commandType, IDbContextTransaction transaction, DbParameter[] sqlParameters, CancellationToken cancellationToken = default)
+        {
+            int obj;
+
+            using (var command = context.Database.GetDbConnection().CreateCommand())
+            {
+                command.Transaction = transaction.GetDbTransaction();
+                command.CommandText = query;
+                command.CommandType = commandType;
+                command.Parameters.AddRange(sqlParameters);
+                obj = await command.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            return obj;
+        }
+        #endregion
+
         public static List<T> ToListFromCache<T>(this IQueryable<T> query, ICache cacheService, TimeSpan expireTime) where T : class
         {
             return ToListFromCache(query, cacheService, query.GetCacheKey(), expireTime);
@@ -236,9 +315,9 @@ namespace fi.EFCore
 
             return result;
         }
-        
+
         public static string GetCacheKey<T>(this IQueryable<T> query) where T : class => query.ToQueryString().ToMd5Fingerprint();
-        
+
         public static string ToMd5Fingerprint(this string s)
         {
             var bytes = Encoding.Unicode.GetBytes(s.ToCharArray());
