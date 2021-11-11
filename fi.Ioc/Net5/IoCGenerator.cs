@@ -1,6 +1,7 @@
 ﻿using fi.Core.Ioc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -32,12 +33,30 @@ namespace fi.Ioc
             internal IServiceCollection Services { get; private set; }
             internal IConfiguration Configuration { get; private set; }
 
+            /// <summary>
+            /// .Net in standart IOC  kullanımı için geliştirilmiştir.
+            /// </summary>
+            /// <param name="services"></param>
+            /// <param name="configuration"></param>
             public void Start(IServiceCollection services, IConfiguration configuration)
             {
                 Services = services;
                 Configuration = configuration;
                 RegisterIntefaceBasedTypes();
                 ConfigureOptionsCore();
+            }
+            /// <summary>
+            /// .Net in standart Worker ları için geliştirilmiştir.
+            /// </summary>
+            /// <param name="hostContext"></param>
+            /// <param name="services"></param>
+            public void Start(HostBuilderContext hostContext, IServiceCollection services)
+            {
+                Services = services;
+                Configuration = hostContext.Configuration;
+                RegisterIntefaceBasedTypes();
+                ConfigureOptionsCore();
+                RegisterHostingWorker();
             }
 
             /// <summary>
@@ -92,6 +111,30 @@ namespace fi.Ioc
                         var optionType = typeof(IOptions<>).MakeGenericType(type);
                         return resolver.GetService(optionType).GetValue(nameof(IOptions<dynamic>.Value));
                     });
+                }
+            }
+            /// <summary>
+            /// IHostedService interface implement eden tüm nesneleri hostservice olarak IOC ye inject ediyor.
+            /// </summary>
+            private void RegisterHostingWorker()
+            {
+                MethodInfo methodInfo =
+             typeof(ServiceCollectionHostedServiceExtensions)
+             .GetMethods()
+             .FirstOrDefault(p => p.Name == nameof(ServiceCollectionHostedServiceExtensions.AddHostedService));
+
+                if (methodInfo == null)
+                    throw new Exception($"Impossible to find the extension method '{nameof(ServiceCollectionHostedServiceExtensions.AddHostedService)}' of '{nameof(IServiceCollection)}'.");
+
+                IEnumerable<Type> hostedServices_FromAssemblies = AppDomain.Current.GetAllAssemblies().SelectMany(a => a.DefinedTypes).Where(x => x.GetInterfaces().Contains(typeof(IHostedService))).Select(p => p.AsType());
+
+                foreach (Type hostedService in hostedServices_FromAssemblies)
+                {
+                    if (typeof(IHostedService).IsAssignableFrom(hostedService))
+                    {
+                        var genericMethod_AddHostedService = methodInfo.MakeGenericMethod(hostedService);
+                        _ = genericMethod_AddHostedService.Invoke(obj: null, parameters: new object[] { Services }); // this is like calling services.AddHostedService<T>(), but with dynamic T (= backgroundService).
+                    }
                 }
             }
         }
