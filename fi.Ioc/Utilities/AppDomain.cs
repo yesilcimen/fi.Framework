@@ -12,18 +12,27 @@ namespace fi.Ioc
     {
         private static readonly Lazy<AppDomain> lazy = new(() => new AppDomain());
         public static AppDomain Current => lazy.Value;
-        private List<Assembly> assemblies;
-        private AppDomain() { }
+        private readonly ICollection<Assembly> assemblies;
+        private AppDomain() { assemblies = new HashSet<Assembly>(); }
 
-        public List<Assembly> GetAllAssemblies()
+        public ICollection<Assembly> GetAllAssemblies()
         {
-            if (assemblies != null)
+            if (assemblies is not null)
                 return assemblies;
 
             var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
-            assemblies = Directory.GetFiles(path, "*.dll").Where(i => !new string[] { "Microsoft.", "System." }.Any(j => i.Contains(j)))
-                .Select(dll => Assembly.LoadFrom(dll)).ToList();
+            var files = Directory.GetFiles(path, "*.dll").Where(i => !new string[] { "Microsoft.", "System." }.Any(j => i.Contains(j)));
+
+            foreach (string item in files)
+            {
+                try
+                {
+                    Assembly assembly = Assembly.LoadFrom(item);
+                    assemblies.Add(assembly);
+                }
+                catch { }
+            }
 
             return assemblies;
 
