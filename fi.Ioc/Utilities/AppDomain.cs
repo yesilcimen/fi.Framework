@@ -17,7 +17,7 @@ namespace fi.Ioc
 
         public ICollection<Assembly> GetAllAssemblies()
         {
-            if (assemblies is not null)
+            if (assemblies.Any())
                 return assemblies;
 
             var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
