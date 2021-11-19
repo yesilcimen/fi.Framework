@@ -97,7 +97,7 @@ namespace fi.Ioc
                 {
                     optionTypes.AddRange(item.ExportedTypes);
                 }
-                optionTypes = optionTypes.Where(x => x.IsClass && typeof(IConfigurationOptions).IsAssignableFrom(x)).ToList();
+                optionTypes = optionTypes.Where(x => !x.IsAbstract && x.IsClass && typeof(IConfigurationOptions).IsAssignableFrom(x)).ToList();
                 foreach (var options in optionTypes)
                 {
                     typeof(OptionsConfigurationServiceCollectionExtensions).GetMethods().First()
@@ -124,16 +124,16 @@ namespace fi.Ioc
              .FirstOrDefault(p => p.Name == nameof(ServiceCollectionHostedServiceExtensions.AddHostedService));
 
                 if (methodInfo == null)
-                    throw new Exception($"Impossible to find the extension method '{nameof(ServiceCollectionHostedServiceExtensions.AddHostedService)}' of '{nameof(IServiceCollection)}'.");
+                    throw new Exception($"'{nameof(IServiceCollection)}' içindeki '{nameof(ServiceCollectionHostedServiceExtensions.AddHostedService)}' extension methodu bulunamamıştır.");
 
-                IEnumerable<Type> hostedServices_FromAssemblies = AppDomain.Current.GetAllAssemblies().SelectMany(a => a.DefinedTypes).Where(x => x.GetInterfaces().Contains(typeof(IHostedService))).Select(p => p.AsType());
+                IEnumerable<Type> hostedServices_FromAssemblies = AppDomain.Current.GetAllAssemblies().SelectMany(a => a.DefinedTypes).Where(x => !x.IsAbstract && x.IsClass && x.GetInterfaces().Contains(typeof(IHostedService))).Select(p => p.AsType());
 
                 foreach (Type hostedService in hostedServices_FromAssemblies)
                 {
                     if (typeof(IHostedService).IsAssignableFrom(hostedService))
                     {
                         var genericMethod_AddHostedService = methodInfo.MakeGenericMethod(hostedService);
-                        _ = genericMethod_AddHostedService.Invoke(obj: null, parameters: new object[] { Services }); // this is like calling services.AddHostedService<T>(), but with dynamic T (= backgroundService).
+                        _ = genericMethod_AddHostedService.Invoke(obj: null, parameters: new object[] { Services });
                     }
                 }
             }
