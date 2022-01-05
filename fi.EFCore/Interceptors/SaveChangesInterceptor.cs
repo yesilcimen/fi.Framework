@@ -47,7 +47,7 @@ namespace fi.EFCore
 
         public InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
         {
-            entityEntries = eventData.Context.ChangeTracker.Entries().Where(w=> w.State != EntityState.Detached && w.State != EntityState.Unchanged).ToArray();
+            entityEntries = eventData.Context.ChangeTracker.Entries().Where(w => w.State != EntityState.Detached && w.State != EntityState.Unchanged).ToArray();
             InterceptBefore(eventData.Context);
 
             foreach (var entry in entityEntries.Where(w => w.State is EntityState.Deleted))
@@ -71,11 +71,14 @@ namespace fi.EFCore
 
         void InterceptBefore(DbContext context)
         {
+            if (entityEntries.Any(entry => entry.Entity.GetType().GetInterfaces().Any(intface => intface.Equals(typeof(IAuditable)))))
+                AuditLogProvider.NewAuditableInterceptor();
+
             foreach (var entry in entityEntries)
             {
                 var interceptorGenerators = new Dictionary<Type, IInterceptorGenerator>();
 
-                foreach (Type intface in entry.Entity.GetType().GetInterfaces().Where(w => w.GetInterfaces().Any(a => a == typeof(IInterceptor))))
+                foreach (Type intface in entry.Entity.GetType().GetInterfaces().Where(w => !w.Equals(typeof(IAuditable)) && w.GetInterfaces().Any(a => a == typeof(IInterceptor))))
                 {
                     if (AuditLogProvider.Interceptors.TryGetValue(intface, out Func<IInterceptorGenerator> p))
                     {
@@ -84,6 +87,10 @@ namespace fi.EFCore
                         generator.OnBefore(entry, context);
                     }
                 }
+
+                if (entry.Entity.GetType().GetInterfaces().Any(a => a.Equals(typeof(IAuditable))))
+                    AuditLogProvider.AuditableInterceptor.OnBefore(entry, context);
+
                 ContuniesInterceptor.Remove(entry.Entity.GetHashCode());
                 ContuniesInterceptor.Add(entry.Entity.GetHashCode(), interceptorGenerators);
             }
@@ -92,25 +99,34 @@ namespace fi.EFCore
         {
             foreach (var entry in entityEntries)
             {
-                foreach (Type intface in entry.Entity.GetType().GetInterfaces().Where(w => w.GetInterfaces().Any(a => a == typeof(IInterceptor))))
+                foreach (Type intface in entry.Entity.GetType().GetInterfaces().Where(w => !w.Equals(typeof(IAuditable)) && w.GetInterfaces().Any(a => a == typeof(IInterceptor))))
                 {
                     if (ContuniesInterceptor.TryGetValue(entry.Entity.GetHashCode(), out IDictionary<Type, IInterceptorGenerator> generators))
                         if (generators.TryGetValue(intface, out IInterceptorGenerator interceptorGenerator))
                             interceptorGenerator.OnAfter();
                 }
             }
+
+            if (entityEntries.Any(entry => entry.Entity.GetType().GetInterfaces().Any(intface => intface.Equals(typeof(IAuditable)))))
+                AuditLogProvider.AuditableInterceptor?.OnAfter();
+
+            AuditLogProvider.AuditableInterceptorClear();
         }
         void InterceptError(Exception exception)
         {
             foreach (var entry in entityEntries)
             {
-                foreach (Type intface in entry.Entity.GetType().GetInterfaces().Where(w => w.GetInterfaces().Any(a => a == typeof(IInterceptor))))
+                foreach (Type intface in entry.Entity.GetType().GetInterfaces().Where(w => !w.Equals(typeof(IAuditable)) && w.GetInterfaces().Any(a => a == typeof(IInterceptor))))
                 {
                     if (ContuniesInterceptor.TryGetValue(entry.Entity.GetHashCode(), out IDictionary<Type, IInterceptorGenerator> generators))
                         if (generators.TryGetValue(intface, out IInterceptorGenerator interceptorGenerator))
                             interceptorGenerator.OnError(exception);
                 }
             }
+            if (entityEntries.Any(entry => entry.Entity.GetType().GetInterfaces().Any(intface => intface.Equals(typeof(IAuditable)))))
+                AuditLogProvider.AuditableInterceptor?.OnError(exception);
+
+            AuditLogProvider.AuditableInterceptorClear();
         }
 
         public void Dispose()

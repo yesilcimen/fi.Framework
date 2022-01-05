@@ -7,7 +7,7 @@ namespace fi.EFCore
     internal class TraceableInterceptor : InterceptorGenerator<ITraceable>
     {
         private readonly Guid userId;
-        public TraceableInterceptor(Guid userId) => this.userId = userId;
+        public TraceableInterceptor(Func<object> userId) => Guid.TryParse(userId()?.ToString(), out this.userId);
         public override void OnAfterError(string execptionMessage) { }
         public override void OnAfterInsert() { }
         public override void OnBeforeDelete(ITraceable item, EntityEntry entityEntry, DbContext dbContext) => item.AuditModifiedBy = userId;

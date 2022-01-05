@@ -4,10 +4,9 @@ namespace fi.EFCore
 {
     public class EntityAudit
     {
-        public int Id { get; set; }
-        public EntityState State { get; set; }
-        public string AuditMessage { get; set; }
-
-        public SaveChangesAudit SaveChangesAudit { get; set; }
+        public EntityState State { get; internal set; }
+        public string AuditMessage { get; internal set; }
+        public string PrimaryKeyValue { get; internal set; }
+        public string EntityName { get; internal set; }
     }
 }
