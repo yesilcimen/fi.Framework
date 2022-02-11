@@ -13,7 +13,7 @@ namespace fi.EFCore
         public AuditableInterceptor(IAuditContext auditContext, Func<object> userId)
         {
             _auditContext = auditContext;
-            audit = new() { AuditId = Guid.NewGuid(), StartTime = DateTime.Now , AuditUserId = userId()?.ToString()};
+            audit = new() { AuditId = Guid.NewGuid(), StartTime = DateTime.Now, AuditUserId = userId()?.ToString() };
         }
 
         public override void OnAfterInsert()
@@ -25,17 +25,15 @@ namespace fi.EFCore
         }
         public override void OnBeforeDelete(IAuditable item, EntityEntry entityEntry, DbContext dbContext)
         {
-            //audit = new() { AuditId = Guid.NewGuid(), StartTime = DateTime.Now };
             audit.Entities.Add(new EntityAudit { EntityName = entityEntry.Metadata.DisplayName(), PrimaryKeyValue = GetPrimaryKeyText(entityEntry), State = EntityState.Deleted, AuditMessage = CreateDeletedMessage(entityEntry) });
 
             static string CreateDeletedMessage(EntityEntry entry)
-                => entry.Properties.Where(property => property.Metadata.IsPrimaryKey()).Aggregate(
+                => entry.Properties.Where(property => property.IsModified || property.Metadata.IsPrimaryKey()).Aggregate(
                     $"Deleting {entry.Metadata.DisplayName()} with ",
                     (auditString, property) => auditString + $"{property.Metadata.Name}: '{property.CurrentValue}' ");
         }
         public override void OnBeforeInsert(IAuditable item, EntityEntry entityEntry, DbContext dbContext)
         {
-            //audit = new() { AuditId = Guid.NewGuid(), StartTime = DateTime.Now };
             audit.Entities.Add(new EntityAudit { EntityName = entityEntry.Metadata.DisplayName(), PrimaryKeyValue = GetPrimaryKeyText(entityEntry), State = EntityState.Added, AuditMessage = CreateAddedMessage(entityEntry) });
 
             static string CreateAddedMessage(EntityEntry entry)
@@ -45,7 +43,6 @@ namespace fi.EFCore
         }
         public override void OnBeforeUpdate(IAuditable item, EntityEntry entityEntry, DbContext dbContext)
         {
-            //audit = new() { AuditId = Guid.NewGuid(), StartTime = DateTime.Now };
             audit.Entities.Add(new EntityAudit { EntityName = entityEntry.Metadata.DisplayName(), PrimaryKeyValue = GetPrimaryKeyText(entityEntry), State = EntityState.Modified, AuditMessage = CreateModifiedMessage(entityEntry) });
 
             static string CreateModifiedMessage(EntityEntry entry)
