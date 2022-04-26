@@ -321,7 +321,7 @@ namespace fi.EFCore
         public static string ToMd5Fingerprint(this string s)
         {
             var bytes = Encoding.Unicode.GetBytes(s.ToCharArray());
-            var hash = new MD5CryptoServiceProvider().ComputeHash(bytes);
+            var hash = MD5.Create().ComputeHash(bytes);
             return hash.Aggregate(new StringBuilder(32), (sb, b) => sb.Append(b.ToString("X2"))).ToString();
         }
 
