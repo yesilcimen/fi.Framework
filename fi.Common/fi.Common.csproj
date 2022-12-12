@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<Copyright>2021</Copyright>
@@ -10,11 +10,13 @@
 		<Description>This is Common Structure</Description>
 		<PackageLicenseExpression></PackageLicenseExpression>
 		<PackageReleaseNotes>This is initial release.</PackageReleaseNotes>
-		<Version>0.0.2</Version>
-		<AssemblyVersion>0.0.2.0</AssemblyVersion>
-		<FileVersion>0.0.2.0</FileVersion>
+		<Version>0.0.3</Version>
+		<AssemblyVersion>0.0.3.0</AssemblyVersion>
+		<FileVersion>0.0.3.0</FileVersion>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	</PropertyGroup>
+
+	<!--@ToDo:aeyesilcimen: 0.0.2 versionundan sonra 5 kaldırıldı.-->
 
 	<ItemGroup>
 		<None Include="..\LICENSE.txt">
@@ -24,7 +26,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="fi.Core" Version="0.0.3" />
+	  <PackageReference Include="fi.Core" Version="0.0.4" />
 	</ItemGroup>
 
 </Project>
