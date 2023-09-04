@@ -47,4 +47,16 @@ namespace fi.EFCore
         internal void NewAuditableInterceptor() => AuditableInterceptor ??= new(Context, GetUserId);
         internal void AuditableInterceptorClear() => AuditableInterceptor = null;
     }
+
+    internal class DefaultAuditLogProvider : AuditLogProvider
+    {
+
+        private static readonly Lazy<DefaultAuditLogProvider> lazy = new(() => new DefaultAuditLogProvider(), true);
+        public static DefaultAuditLogProvider Current => lazy.Value;
+
+        public override object GetUserId()
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

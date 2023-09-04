@@ -17,8 +17,7 @@ namespace fi.EFCore
         public SaveChangesInterceptor(AuditLogProvider auditLogProvider)
         {
             Console.WriteLine($"SaveChangesInterceptor : {this.GetHashCode()}");
-            if (auditLogProvider is not null)
-                AuditLogProvider = auditLogProvider;
+            AuditLogProvider = auditLogProvider ?? DefaultAuditLogProvider.Current;
             ContuniesInterceptor = new Dictionary<int, IDictionary<Type, IInterceptorGenerator>>();
         }
 
