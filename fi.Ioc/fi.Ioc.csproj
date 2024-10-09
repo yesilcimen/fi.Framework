@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<Copyright>2021</Copyright>
@@ -10,9 +10,9 @@
 		<Description>This is IOC Structure</Description>
 		<PackageLicenseExpression></PackageLicenseExpression>
 		<PackageReleaseNotes>This is initial release.</PackageReleaseNotes>
-		<Version>0.0.7</Version>
-		<AssemblyVersion>0.0.7.0</AssemblyVersion>
-		<FileVersion>0.0.7.0</FileVersion>
+		<Version>0.0.8</Version>
+		<AssemblyVersion>0.0.8.0</AssemblyVersion>
+		<FileVersion>0.0.8.0</FileVersion>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	</PropertyGroup>
 
@@ -31,6 +31,11 @@
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
 	</ItemGroup>
 	
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net8.0'  ">
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<None Include="..\LICENSE.txt">
 			<Pack>True</Pack>
