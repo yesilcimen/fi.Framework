@@ -20,7 +20,7 @@
 	<ItemGroup>
 		<PackageReference Include="fi.Core" Version="0.0.4" />
 	</ItemGroup>
-	
+
 	<!--@ToDo:aeyesilcimen: 0.0.6 versionundan sonra 5 kaldırıldı.-->
 	<!--<ItemGroup Condition=" '$(TargetFramework)' == 'net5.0'  ">
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.16" />
@@ -43,10 +43,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="..\LICENSE.txt">
-	    <Pack>True</Pack>
-	    <PackagePath></PackagePath>
-	  </None>
+		<None Include="..\LICENSE.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="..\README.md">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
 	</ItemGroup>
 
 </Project>
