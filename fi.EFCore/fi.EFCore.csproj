@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<Copyright>2021</Copyright>
@@ -14,6 +14,7 @@
 		<AssemblyVersion>0.0.9.0</AssemblyVersion>
 		<FileVersion>0.0.9.0</FileVersion>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<ItemGroup>
