@@ -10,9 +10,9 @@
 		<Description>This is Common Structure</Description>
 		<PackageLicenseExpression></PackageLicenseExpression>
 		<PackageReleaseNotes>This is initial release.</PackageReleaseNotes>
-		<Version>0.0.4</Version>
-		<AssemblyVersion>0.0.4.0</AssemblyVersion>
-		<FileVersion>0.0.4.0</FileVersion>
+		<Version>0.0.5</Version>
+		<AssemblyVersion>0.0.5.0</AssemblyVersion>
+		<FileVersion>0.0.5.0</FileVersion>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 	</PropertyGroup>
 
@@ -26,7 +26,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="fi.Core" Version="0.0.4" />
+	  <PackageReference Include="fi.Core" Version="0.0.5" />
 	</ItemGroup>
 
 </Project>
