@@ -4,7 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace fi.RMQueue
+namespace fi.RMQueueDLX
 {
     /// <summary>
     /// AutoScale yapısını açtığınızda kullanılması gereken base sınıfıdır.

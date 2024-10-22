@@ -5,20 +5,21 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace fi.RMQueue
+namespace fi.RMQueueDLX
 {
     public abstract class Service
     {
         protected readonly ILogger _logger;
-        protected readonly IConnection _connection;
         protected readonly IServiceScopeFactory _serviceScopeFactory;
         protected readonly string _connectionUrl;
         private readonly IDictionary<string, Subscriber> _subscribers;
+        private readonly IModel _channel;
 
         public Service(string connectionUrl, ILogger<Service> logger, IServiceScopeFactory serviceScopeFactory)
         {
@@ -30,14 +31,15 @@ namespace fi.RMQueue
             _subscribers = new Dictionary<string, Subscriber>();
             _serviceScopeFactory = serviceScopeFactory;
             _connectionUrl = connectionUrl;
-            _connection = CreateConnetion();
+            _channel = CreateConnetion().CreateModel();
         }
 
         IConnection CreateConnetion()
         {
             var connectionFactory = new ConnectionFactory
             {
-                Uri = new Uri(_connectionUrl)
+                Uri = new Uri(_connectionUrl),
+                DispatchConsumersAsync = true,
             };
 
             return connectionFactory.CreateConnection();
@@ -45,16 +47,15 @@ namespace fi.RMQueue
 
         public void Send<T>(string queueName, T data) where T : IQueueCommand
         {
-            using var channel = _connection.CreateModel();
-            channel.DeclareQueueWithDLX(queueName);
+            _channel.DeclareQueueWithDLX(queueName);
 
             var json = data.Serialize();
             var body = Encoding.UTF8.GetBytes(json);
 
-            var properties = channel.CreateBasicProperties();
+            var properties = _channel.CreateBasicProperties();
             properties.Persistent = true;
 
-            channel.BasicPublish(exchange: "",
+            _channel.BasicPublish(exchange: "",
                                  routingKey: queueName,
                                  basicProperties: properties,
                                  body: body);
@@ -62,18 +63,17 @@ namespace fi.RMQueue
 
         public void Publish<T>(T data) where T : IQueueEvent
         {
-            using var channel = _connection.CreateModel();
             var json = data.Serialize();
             var body = Encoding.UTF8.GetBytes(json);
 
             var exchangeName = $"event.{data.GetType().Name}";
 
-            channel.ExchangeDeclareNoWait(exchangeName, ExchangeType.Fanout, durable: true, arguments: null);
+            _channel.ExchangeDeclareNoWait(exchangeName, ExchangeType.Fanout, durable: true, arguments: null);
 
-            var properties = channel.CreateBasicProperties();
+            var properties = _channel.CreateBasicProperties();
             properties.Persistent = true;
 
-            channel.BasicPublish(exchange: exchangeName,
+            _channel.BasicPublish(exchange: exchangeName,
                                  routingKey: "",
                                  basicProperties: properties,
                                  body: body);
@@ -82,38 +82,26 @@ namespace fi.RMQueue
 
         public void PublishWithHeaders<T>(T data, Dictionary<string, object> headers, string exchangeName = null) where T : IQueueEvent
         {
-            using var channel = _connection.CreateModel();
             var json = data.Serialize();
             var body = Encoding.UTF8.GetBytes(json);
 
             exchangeName ??= $"event.{data.GetType().Name}";
 
-            channel.ExchangeDeclareNoWait(exchangeName, ExchangeType.Headers, durable: true, arguments: null);
+            _channel.ExchangeDeclareNoWait(exchangeName, ExchangeType.Headers, durable: true, arguments: null);
 
-            var properties = channel.CreateBasicProperties();
+            var properties = _channel.CreateBasicProperties();
             properties.Persistent = true;
             properties.Headers = headers;
 
-            channel.BasicPublish(exchange: exchangeName,
+            _channel.BasicPublish(exchange: exchangeName,
                                  routingKey: "",
                                  basicProperties: properties,
                                  body: body);
         }
 
-        public Task Subscribe<T>(string queueName, QueueConfigTemplate template) where T : IConsumer
+        public Task SubscribeAsync<T>(string queueName, QueueConfigTemplate template, CancellationToken cancellationToken = default) where T : IConsumer
         {
-            var consumerMetadata = ConsumerInstance.GetConsumerMetadata<T>();
-
-            Subscribe(queueName, template, consumerMetadata);
-
-            return Task.CompletedTask;
-        }
-
-        public Task Subscribe(Type type, string queueName, QueueConfigTemplate template)
-        {
-            var consumerMetadata = ConsumerInstance.GetConsumerMetadata(type);
-
-            Subscribe(queueName, template, consumerMetadata);
+            Subscribe(queueName, template, typeof(T), cancellationToken);
 
             return Task.CompletedTask;
         }
@@ -137,9 +125,9 @@ namespace fi.RMQueue
 
                 if (queue.ConfigTemplate.AutoScale && idealConsumerCount > channel.ChannelNumber && channel.ChannelNumber <= queue.ConfigTemplate.ScaleUpTo)
                 {
-                    Subscribe(queues.Key, queue.ConfigTemplate, consumerMetadata, true, (uint)channel.ChannelNumber, channel);
+                    Subscribe(queues.Key, queue.ConfigTemplate, consumerMetadata, default, true, (uint)channel.ChannelNumber, channel);
 
-                    _logger.LogInformation("Auto scaler created new instance. {Queue} {Consumer}", queues.Key, consumerMetadata.ConsumerType.Name);
+                    _logger.LogInformation("Auto scaler created new instance. {Queue} {Consumer}", queues.Key, consumerMetadata.Name);
                 }
 
                 else if (idealConsumerCount < channel.ChannelNumber && queue.SubscribeInfos.Where(x => x.IsScaleInstance).Any())
@@ -154,12 +142,12 @@ namespace fi.RMQueue
                         if (!cancellingConsumer.Channel.IsClosed)
                         {
                             cancellingConsumer.Channel.Close();
-                            _logger.LogInformation("Auto scaler closed an instance. {Queue} {Consumer}", queues.Key, consumerMetadata.ConsumerType.Name);
+                            _logger.LogInformation("Auto scaler closed an instance. {Queue} {Consumer}", queues.Key, consumerMetadata.Name);
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Auto scaler could not close an instance. {Queue} {Consumer} ", queues.Key, consumerMetadata.ConsumerType.Name);
+                        _logger.LogError(ex, "Auto scaler could not close an instance. {Queue} {Consumer} ", queues.Key, consumerMetadata.Name);
 
                         queue.SubscribeInfos.RemoveAll(x => x.Tag == queue.SubscribeInfos.First().Tag);
                     }
@@ -174,7 +162,7 @@ namespace fi.RMQueue
         public void StopConsumers()
         {
             var activeConsumers = _subscribers
-                .SelectMany(sm => sm.Value.SubscribeInfos.Select(x => new { QueueName = sm.Key, Consumer = x.ConsumerMetadata.ConsumerType.Name, x.Channel, x.Tag })).ToList();
+                .SelectMany(sm => sm.Value.SubscribeInfos.Select(x => new { QueueName = sm.Key, Consumer = x.ConsumerMetadata.Name, x.Channel, x.Tag })).ToList();
 
             foreach (var item in activeConsumers)
             {
@@ -195,9 +183,9 @@ namespace fi.RMQueue
             _subscribers.Clear();
         }
 
-        private void Subscribe(string queueName, QueueConfigTemplate template, ConsumerMetadata consumerMetadata, bool isScaleInstance = false, uint scaleNumber = 0, IModel channel = null)
+        private void Subscribe(string queueName, QueueConfigTemplate template, Type type, CancellationToken cancellationToken = default, bool isScaleInstance = false, uint scaleNumber = 0, IModel channel = null)
         {
-            _logger.LogInformation("{Queue} started consuming from {Consumer}. {@Template}", queueName, consumerMetadata.ConsumerType.Name, template);
+            _logger.LogInformation("{Queue} started consuming from {Consumer}. {@Template}", queueName, type.Name, template);
 
             IConnection conn = null;
             if (channel is null)
@@ -208,25 +196,28 @@ namespace fi.RMQueue
 
             channel.DeclareQueueWithDLX(queueName);
 
-            if (consumerMetadata.IsEvent)
+            if (type.GetInterfaces().Any(x => x == typeof(IEventConsumer))) //IsEvent
             {
-                var exchangeName = template.ExchangeName ?? $"event.{consumerMetadata.MessageType.Name}";
+                var exchangeName = template.ExchangeName ?? $"event.{type.Name}";
 
                 channel.ExchangeDeclareNoWait(exchangeName, template.ExchangeType, durable: true, arguments: null);
 
                 channel.QueueBind(queueName, exchangeName, "", template.Headers);
             }
 
-            var consumer = new EventingBasicConsumer(channel);
+            var consumer = new AsyncEventingBasicConsumer(channel);
 
             channel.SetDelayedDeadLetterExchange(queueName);
 
-            consumer.Received += (model, ea) =>
+            consumer.Received += async (model, ea) =>
             {
-                object queueModel = null;
-
                 //ToDo:@aeyesilcimen => aşağıdaki kod trygetvalue çalışmadığı için linq yazıldı. Tryget denemek için debug yapıp sonra kodu sabitleyin.29-11-2021
-                if (!int.TryParse(ea.BasicProperties.Headers?.Where(w => w.Key.Equals("x-retry")).Select(s => s.Value.ToString()).FirstOrDefault(), out int retryCount))
+                if (!int.TryParse(
+                    ea.BasicProperties.Headers?
+                        .Where(w =>
+                            w.Key.Equals("x-retry"))
+                        .Select(s => s.Value.ToString())
+                        .FirstOrDefault(), out int retryCount))
                     retryCount = -1;
 
                 var body = ea.Body.ToArray();
@@ -234,44 +225,41 @@ namespace fi.RMQueue
 
                 try
                 {
-                    queueModel = message.Deserialize(consumerMetadata.MessageType);
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogError(exception, "{Queue} Json convert error. Message moved to fault queue", queueName);
-
-                    var properties = channel.CreateBasicProperties();
-                    properties.Persistent = true;
-                    properties.Headers = new Dictionary<string, object>(template.Headers)
-                    {
-                        { "Error", exception.Message }
-                    };
-
-                    channel.MoveToFaultQueue(queueName, ea.DeliveryTag, body, properties);
-
-                    return;
-                }
-
-                try
-                {
+                    Stopwatch stopwatch = Stopwatch.StartNew();
                     using var scope = _serviceScopeFactory.CreateScope();
-                    var instance = scope.ServiceProvider.GetRequiredService(consumerMetadata.ConsumerType);
-                    consumerMetadata.Method.Invoke(instance, new[] { queueModel, scaleNumber });
+                    var instance = scope.ServiceProvider.GetRequiredService(type);
+                    Console.WriteLine("Scope : {0}", stopwatch.Elapsed.TotalMilliseconds);
+
+                    if (instance is not IConsumer consumer)
+                    {
+                        _logger.LogError("{Queue} {Consumer} not implemented IConsumer", queueName, type.Name);
+                        await Task.Yield();
+                        return;
+                    }
+
+                    await consumer.ConsumeAsync(message, scaleNumber, cancellationToken);
 
                     channel.BasicAck(ea.DeliveryTag, false);
+
+                    
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "{Queue} {Consumer} Error", queueName, consumerMetadata.ConsumerType.Name);
+                    _logger.LogError(ex, "{Queue} {Consumer} Error", queueName, type.Name);
 
                     channel.ExecuteRetryPolicy(queueName, template, body, ea.DeliveryTag, retryCount, ex);
+                    await Task.Yield();
                 }
+
+                await Task.Yield();
             };
 
-            consumer.ConsumerCancelled += (model, ea) =>
+            consumer.ConsumerCancelled += async (model, ea) =>
             {
                 foreach (var item in _subscribers)
                     item.Value.SubscribeInfos.RemoveAll(x => x.Tag == ea.ConsumerTags[0]);
+
+                await Task.Yield();
             };
 
             channel.ModelShutdown += (model, ea) =>
@@ -293,7 +281,7 @@ namespace fi.RMQueue
             SubscribeInfo subscriberInfo = new()
             {
                 Channel = channel,
-                ConsumerMetadata = consumerMetadata,
+                ConsumerMetadata = type,
                 IsScaleInstance = isScaleInstance,
                 Tag = tag
             };

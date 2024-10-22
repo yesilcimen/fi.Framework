@@ -2,8 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace fi.RMQueue
+namespace fi.RMQueueDLX
 {
     public class ConsumerMetadata
     {
@@ -12,16 +14,14 @@ namespace fi.RMQueue
         public Type MessageType { get; set; }
         public bool IsEvent { get; set; }
     }
-    public interface IConsumer { }
+    public interface IConsumer { 
+        Task ConsumeAsync(string textJson, uint scaleNumber, CancellationToken cancellationToken = default);
+    }
+    public interface IEventConsumer : IConsumer { }
     public interface IQueueCommand { }
     public interface IQueueEvent { }
-    public interface IConsumer<T> : IConsumer where T : class
-    {
-        void Consume(T message, uint scaleNumber);
-    }
     public class Subscriber
     {
-        //public string QueueName { get; set; }
         public IConnection Connection { get; set; }
         public QueueConfigTemplate ConfigTemplate { get; set; }
         public List<SubscribeInfo> SubscribeInfos { get; set; }
@@ -32,6 +32,6 @@ namespace fi.RMQueue
         public bool IsScaleInstance { get; set; }
         public IModel Channel { get; set; }
         public string Tag { get; set; }
-        public ConsumerMetadata ConsumerMetadata { get; set; }
+        public Type ConsumerMetadata { get; set; }
     }
 }

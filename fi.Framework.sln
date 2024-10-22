@@ -9,15 +9,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fi.Core", "fi.Core\fi.Core.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fi.Common", "fi.Common\fi.Common.csproj", "{A29E723E-17CD-49DE-AB99-1019AF541C18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fi.API", "fi.API\fi.API.csproj", "{C492DCA3-E235-4A14-A7D2-F58C41B735BA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fi.API", "fi.API\fi.API.csproj", "{C492DCA3-E235-4A14-A7D2-F58C41B735BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fi.Cache", "fi.Cache\fi.Cache.csproj", "{89DC1AA3-A82D-4F37-B059-0BF160D3DDC9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fi.Cache", "fi.Cache\fi.Cache.csproj", "{89DC1AA3-A82D-4F37-B059-0BF160D3DDC9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fi.EFCore", "fi.EFCore\fi.EFCore.csproj", "{8E1FC8B4-E559-41A6-9959-0E096C11F50A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fi.gRPC", "fi.gRPC\fi.gRPC.csproj", "{B54D43B9-8885-4583-AE56-07C8C5215C62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fi.gRPC", "fi.gRPC\fi.gRPC.csproj", "{B54D43B9-8885-4583-AE56-07C8C5215C62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fi.RMQueue", "fi.RMQueue\fi.RMQueue.csproj", "{10D36FA4-6EF9-4489-9FB1-60998539ECCA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fi.RMQueueDLX", "fi.RMQueue\fi.RMQueueDLX.csproj", "{10D36FA4-6EF9-4489-9FB1-60998539ECCA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

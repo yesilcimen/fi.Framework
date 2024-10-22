@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace fi.RMQueue
+namespace fi.RMQueueDLX
 {
     public static class ChannelExtensions
     {
@@ -10,8 +10,10 @@ namespace fi.RMQueue
         {
             var dlxExchange = $"dlx.{queueName}";
 
-            Dictionary<string, object> args = new();
-            args.Add("x-delayed-type", "fanout");
+            Dictionary<string, object> args = new()
+            {
+                { "x-delayed-type", "fanout" }
+            };
 
             channel.ExchangeDeclare(dlxExchange, "x-delayed-message", arguments: args);
             channel.QueueBind(queueName, dlxExchange, "", null);
@@ -23,8 +25,10 @@ namespace fi.RMQueue
 
             channel.BasicAck(deliveryTag, false);
 
-            Dictionary<string, object> args = new();
-            args.Add("x-queue-mode", "lazy");
+            Dictionary<string, object> args = new()
+            {
+                { "x-queue-mode", "lazy" }
+            };
 
             channel.QueueDeclareNoWait(queue: faultQueue,
                          durable: true,
@@ -74,8 +78,10 @@ namespace fi.RMQueue
         {
             var exchange = $"dlx.{queueName}";
 
-            Dictionary<string, Object> args = new();
-            args.Add("x-dead-letter-exchange", exchange);
+            Dictionary<string, Object> args = new()
+            {
+                { "x-dead-letter-exchange", exchange }
+            };
 
             channel.QueueDeclareNoWait(queue: queueName,
                                  durable: true,

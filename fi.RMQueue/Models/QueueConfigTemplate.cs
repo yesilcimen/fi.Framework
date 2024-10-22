@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 
-namespace fi.RMQueue
+namespace fi.RMQueueDLX
 {
     public class QueueConfigTemplate
     {
