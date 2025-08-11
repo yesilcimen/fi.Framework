@@ -11,7 +11,7 @@ namespace fi.Common
     {
         private readonly JsonSerializerOptions options = new()
         {
-            WriteIndented = true,
+            WriteIndented = true, //satırlara \r\n ekliyor. data boyutu büyüyor.
             PropertyNameCaseInsensitive = true,
             Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
