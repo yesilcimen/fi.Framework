@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.7.34221.43
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fi.Ioc", "fi.Ioc\fi.Ioc.csproj", "{A1FB0171-A732-40BF-8306-0AAB313BB49A}"
 EndProject
@@ -18,6 +18,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fi.gRPC", "fi.gRPC\fi.gRPC.csproj", "{B54D43B9-8885-4583-AE56-07C8C5215C62}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fi.RMQueueDLX", "fi.RMQueue\fi.RMQueueDLX.csproj", "{10D36FA4-6EF9-4489-9FB1-60998539ECCA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fi.HangfireCommon", "fi.HangfireCommon\fi.HangfireCommon.csproj", "{393C9E25-B00E-42C7-9B37-D1AC43CA9D94}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +59,10 @@ Global
 		{10D36FA4-6EF9-4489-9FB1-60998539ECCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{10D36FA4-6EF9-4489-9FB1-60998539ECCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{10D36FA4-6EF9-4489-9FB1-60998539ECCA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{393C9E25-B00E-42C7-9B37-D1AC43CA9D94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{393C9E25-B00E-42C7-9B37-D1AC43CA9D94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{393C9E25-B00E-42C7-9B37-D1AC43CA9D94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{393C9E25-B00E-42C7-9B37-D1AC43CA9D94}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
