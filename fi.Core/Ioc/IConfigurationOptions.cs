@@ -1,4 +1,3 @@
-﻿namespace fi.Core.Ioc
-{
-    public interface IConfigurationOptions { }
-}
+﻿namespace fi.Core.Ioc;
+
+public interface IConfigurationOptions;
